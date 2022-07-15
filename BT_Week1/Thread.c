@@ -50,7 +50,7 @@ void *Logging_Print(void *LOGGING){
 	time_nsec_prev = ts.tv_nsec;
 
     	// In gia tri thoi gian trong bien T vaof file tiime_and_interval.txt
-    	file_print = fopen("freq_100ns.txt","a");
+    	file_print = fopen("freq_1000000ns.txt","a");
     	if (file_print && interval != 0){
             fprintf(file_print,"%ld\n",interval);
     	}
