@@ -19,10 +19,8 @@ FILE *file_freq;
 
 void *Sampling(void * SAMPLE){
 
-    clock_gettime(CLOCK_REALTIME, &request);
-
-    
     while (1){ 
+  	clock_gettime(CLOCK_REALTIME, &request);
 	// Lap lai voi chu ky X (nanoseconds)
 	request.tv_nsec +=X;
 	clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &request, NULL);
@@ -39,24 +37,23 @@ void *Sampling(void * SAMPLE){
 
 void *Logging_Print(void *LOGGING){
     
+    file_print = fopen("freq_100ns.txt","a");
+
     while(1){
 
-    	if (ts.tv_sec>time_sec_prev)
-    	    interval = (int)(1e9) + ts.tv_nsec - time_nsec_prev;
-    	else
-            interval = ts.tv_nsec - time_nsec_prev;
+    	interval = (1e9*ts.tv_sec+ts.tv_nsec) - (1e9*time_sec_prev+time_nsec_prev);
 
 	time_sec_prev = ts.tv_sec;
 	time_nsec_prev = ts.tv_nsec;
 
     	// In gia tri thoi gian trong bien T vaof file tiime_and_interval.txt
-    	file_print = fopen("freq_1000000ns.txt","a");
-    	if (file_print && interval != 0){
-            fprintf(file_print,"%ld\n",interval);
-    	}
     	
-    	fclose(file_print);
+    	if (file_print && interval != 0)
+            fprintf(file_print,"%ld\n",interval);
+    	
     }
+    
+    fclose(file_print);
 
 }
 
