@@ -2,8 +2,8 @@
 
 gcc -pthread -o Thread Thread.c
 
-for period in 100
+for period in 100000
 do
     echo "$period" > freq.txt
-    timeout 30 ./Thread 
+    timeout 10 ./Thread 
 done

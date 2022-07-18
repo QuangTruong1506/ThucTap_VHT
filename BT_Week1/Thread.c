@@ -18,16 +18,26 @@ FILE *file_print;
 FILE *file_freq;
 
 void *Sampling(void * SAMPLE){
+    
+    clock_gettime(CLOCK_REALTIME, &request);
 
-    while (1){ 
-  	clock_gettime(CLOCK_REALTIME, &request);
-	// Lap lai voi chu ky X (nanoseconds)
-	request.tv_nsec +=X;
-	clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &request, NULL);
+    int start = 1;
+    while (start == 1){ 
 
         clock_gettime(CLOCK_REALTIME, &ts);
         // printf("Current Time: %ld.%09ld\n", ts.tv_sec, ts.tv_nsec);
 
+	// Lap lai voi chu ky X (nanoseconds)
+	request.tv_nsec +=X;
+	if (request.tv_nsec > 1000000000){
+	    request.tv_nsec -= 1000000000;
+	    request.tv_nsec += 1;
+	}
+
+	if (clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &request, NULL) !=0)
+	    start = 0;
+	else 
+	    start = 1;
         // Luu thoi gian vao bien T
         char buff[50];
         strftime(buff, sizeof buff, "%s", gmtime(&ts.tv_sec));
@@ -37,7 +47,7 @@ void *Sampling(void * SAMPLE){
 
 void *Logging_Print(void *LOGGING){
     
-    file_print = fopen("freq_100ns.txt","a");
+    file_print = fopen("freq_100000ns_test.txt","a");
 
     while(1){
 
