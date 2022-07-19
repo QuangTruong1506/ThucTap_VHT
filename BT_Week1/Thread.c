@@ -14,6 +14,8 @@ static struct timespec ts, request;
 static long int time_sec_prev;
 static long int time_nsec_prev;
 
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
+
 FILE *file_print;
 FILE *file_freq;
 
@@ -21,8 +23,8 @@ void *Sampling(void * SAMPLE){
     
     clock_gettime(CLOCK_REALTIME, &request);
 
-    int start = 1;
-    while (start == 1){ 
+    while (1){ 
+	pthread_mutex_lock(&mutex);
 
         clock_gettime(CLOCK_REALTIME, &ts);
         // printf("Current Time: %ld.%09ld\n", ts.tv_sec, ts.tv_nsec);
@@ -31,23 +33,22 @@ void *Sampling(void * SAMPLE){
 	request.tv_nsec +=X;
 	if (request.tv_nsec > 1000000000){
 	    request.tv_nsec -= 1000000000;
-	    request.tv_nsec += 1;
+	    request.tv_sec ++;
 	}
 
-	if (clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &request, NULL) !=0)
-	    start = 0;
-	else 
-	    start = 1;
+	clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &request, NULL);
+	    
         // Luu thoi gian vao bien T
         char buff[50];
         strftime(buff, sizeof buff, "%s", gmtime(&ts.tv_sec));
         snprintf(T, sizeof T, "%s.%09ld\n", buff, ts.tv_nsec);
+	pthread_mutex_unlock(&mutex);
     }   
 }
 
 void *Logging_Print(void *LOGGING){
     
-    file_print = fopen("freq_100000ns_test.txt","a");
+    file_print = fopen("freq_1000000ns_test.txt","a");
 
     while(1){
 
@@ -64,16 +65,18 @@ void *Logging_Print(void *LOGGING){
     }
     
     fclose(file_print);
-
 }
 
 void *Reading_Input(void *INPUT){
 
     while(1){
+
     	// Doc gia tri chu ky lay mau tu file freq.txt 
     	file_freq = fopen("freq.txt","r");
     	fscanf (file_freq, "%d", &X);
+	//printf("Frequency = %d\n",X);
     	fclose(file_freq);
+	
     }
 }
 
@@ -83,6 +86,7 @@ int main(int argc, char** argv) {
     pthread_create( &INPUT, NULL, Reading_Input, (void*) &INPUT);
     pthread_create( &SAMPLE, NULL, Sampling, (void *)&SAMPLE);  
     pthread_create( &LOGGING, NULL, Logging_Print, (void*) &LOGGING);
+
 
     pthread_join( INPUT, NULL);
     pthread_join( SAMPLE, NULL);
